@@ -20,7 +20,9 @@ class LanguageModel():
         self.trigram_dict = defaultdict(int)
         self.bigram_dict = defaultdict(int)
         self.unigram_dict = defaultdict(int)
-        self.inverse_dict = defaultdict(int)
+        self.inverse_dict3 = defaultdict(int)
+        self.inverse_dict2 = defaultdict(int)
+        self.inverse_dict1 = defaultdict(int)
         self.simple_prob_index = defaultdict(int)
         self.count_of_seen_dict = defaultdict(int)
         self.discount_measure = 0.0
@@ -51,11 +53,12 @@ class LanguageModel():
                 self.unigram_dict[unigram] += 1
                 
             for trigram in self.trigram_dict:
-                self.inverse_dict[self.trigram_dict[trigram]] += 1 
+                self.inverse_dict3[self.trigram_dict[trigram]] += 1 
             for bigram in self.bigram_dict:
-                self.inverse_dict[self.bigram_dict[bigram]] += 1
+                self.inverse_dict2[self.bigram_dict[bigram]] += 1
             for unigram in self.unigram_dict:
-                self.inverse_dict[self.unigram_dict[unigram]] += 1
+                self.inverse_dict1[self.unigram_dict[unigram]] += 1
+            
             
                 
     def calculateProbability(self,trigram,bigram,d=0):
@@ -72,15 +75,15 @@ class LanguageModel():
                 
             
     def goodTuring(self, word):
-        singleton = self.inverse_dict[1]
+        singleton = self.inverse_dict3[1]
         
         if word not in self.trigram_dict:
             probability_of_unseen = singleton / float(len(self.trigram_dict))
             return probability_of_unseen
         
         c = self.trigram_dict[word]
-        Nc = self.inverse_dict[c]
-        Nc1 = self.inverse_dict[c+1] # what about the case when C+1 does not exist.
+        Nc = self.inverse_dict3[c]
+        Nc1 = self.inverse_dict3[c+1] # what about the case when C+1 does not exist.
         count_of_seen = (c + 1) * Nc1 / float(Nc)
         probability_of_seen = float(count_of_seen) / float(len(self.trigram_dict))
 #         print 'word= ', word, '\t', 'C= ',c,'\t', 'Nc = ',Nc,'\t', 'Nc1 = ', Nc1,'\t', 'Count of Seen = ',count_of_seen
@@ -115,53 +118,101 @@ class LanguageModel():
         return max(self.calculateProbability(word, word[0:2],1),0) + self.beta(word)*self.continuation_probability(word)
     
     def discount_KN(self,nGram,number=0):
+        c = self.trigram_dict[nGram] + self.bigram_dict[nGram] + self.unigram_dict[nGram] 
         d1 = 0
         d2 = 0
         d3 = 0
         if len(nGram) == 3:
-            c = self.trigram_dict[nGram]
-        elif len(nGram) == 2:
-            c = self.bigram_dict[nGram]
-        else:
-            c = self.unigram_dict[nGram]
-        Y = self.inverse_dict[1]/float((self.inverse_dict[1]+(2*self.inverse_dict[1+1])))
-        if self.inverse_dict[c] != 0:
+            Y = self.inverse_dict3[1]/float((self.inverse_dict3[1]+(2*self.inverse_dict3[1+1])))
             if c == 1:
-                d1 = 1 - (2*Y*self.inverse_dict[c+1]/self.inverse_dict[c])
+                d1 = 1 - (2*Y*self.inverse_dict3[c+1]/self.inverse_dict3[c])
             if c == 2:
-                d2 = 2 - (3*Y*self.inverse_dict[c+1]/self.inverse_dict[c])
-            #will never run since there are no nGrams with more than 3 letters.
+                d2 = 2 - (3*Y*self.inverse_dict3[c+1]/self.inverse_dict3[c])
             if c>=3:
-                d3 = 3 - (4*Y*self.inverse_dict[c+1]/self.inverse_dict[c])
+                d3 = 3 - (4*Y*self.inverse_dict3[4]/self.inverse_dict3[3])
+                
             if number == 1:
-                return  1 - (2*Y*self.inverse_dict[2]/self.inverse_dict[1])
+                return  1 - (2*Y*self.inverse_dict3[2]/self.inverse_dict3[1])
             elif number == 2:
-                return  1 - (2*Y*self.inverse_dict[3]/self.inverse_dict[2])
+                return  1 - (2*Y*self.inverse_dict3[3]/self.inverse_dict3[2])
             elif number == 3:
-                return  1 - (2*Y*self.inverse_dict[4]/self.inverse_dict[3])
+                return  1 - (2*Y*self.inverse_dict3[4]/self.inverse_dict3[3])
             else:
                 return d1+d2+d3
+            
+        elif len(nGram) == 2:
+            Y = self.inverse_dict2[1]/float((self.inverse_dict2[1]+(2*self.inverse_dict2[1+1])))
+            if c == 1:
+                d1 = 1 - (2*Y*self.inverse_dict2[c+1]/self.inverse_dict2[c])
+            if c == 2:
+                d2 = 2 - (3*Y*self.inverse_dict2[c+1]/self.inverse_dict2[c])
+            if c>=3:
+                d3 = 3 - (4*Y*self.inverse_dict2[4]/self.inverse_dict2[3])
+                
+            if number == 1:
+                return  1 - (2*Y*self.inverse_dict2[2]/self.inverse_dict2[1])
+            elif number == 2:
+                return  1 - (2*Y*self.inverse_dict2[3]/self.inverse_dict2[2])
+            elif number == 3:
+                return  1 - (2*Y*self.inverse_dict2[4]/self.inverse_dict2[3])
+            else:
+                return d1+d2+d3
+        
         else:
-            return 0
+            Y = self.inverse_dict1[1]/float((self.inverse_dict1[1]+(2*self.inverse_dict1[1+1])))
+            if c == 1:
+                d1 = 1 - (2*Y*self.inverse_dict1[c+1]/self.inverse_dict1[c])
+            if c == 2:
+                d2 = 2 - (3*Y*self.inverse_dict1[c+1]/self.inverse_dict1[c])
+            if c>=3:
+                d3 = 3 - (4*Y*self.inverse_dict1[4]/self.inverse_dict1[3])
+            
+            
+            if number == 1:
+                return  1 - (2*Y*self.inverse_dict1[2]/self.inverse_dict1[1])
+            elif number == 2:
+                return  1 - (2*Y*self.inverse_dict1[3]/self.inverse_dict1[2])
+            elif number == 3:
+                return  1 - (2*Y*self.inverse_dict1[4]/self.inverse_dict1[3])
+            else:
+                return d1+d2+d3
         
             
     
-    def alpha(self,nGram):
-        D = self.discount_KN(nGram)
-        if len(nGram) == 3:
-            ngram_count = self.trigram_dict[nGram]
-            return (ngram_count-D)/float(self.bigram_dict[nGram[0:2]])
-        elif len(nGram) == 2:
-            ngram_count = self.bigram_dict[nGram]
-            return (ngram_count-D)/float(self.unigram_dict[nGram[0]])
-        else:
-            ngram_count = self.unigram_dict[nGram]
-            return (ngram_count-D)/float(len(self.unigram_dict))
+    def alpha_high(self,trigram):
+        D = self.discount_KN(trigram)
+        trigram_count = self.trigram_dict[trigram]
+        return (trigram_count-D)/float(self.bigram_dict[trigram[0:2]])
         
     
-    def calc_d(self,nGram):
-        counter3 = 0
-        counter2 = 0
+    def alpha_low_bigram(self,bigram):
+        D = self.discount_KN(bigram)
+        bigram_history_count = 0
+        for trigram in self.trigram_dict:
+            if trigram[1:3] == bigram:
+                bigram_history_count += 1
+        unigram_history_count = 0
+        for ngram in self.bigram_dict:
+            if len(ngram)>1:
+                if ngram[1] == bigram[0]:
+                    unigram_history_count += 1
+        continuation_probability = (bigram_history_count - D)/float(unigram_history_count)
+        return continuation_probability
+    
+    def alpha_low_unigram(self,unigram):
+        D = self.discount_KN(unigram)
+        unigram_history_count = 0
+        for ngram in self.bigram_dict:
+#             print ngram,'len of ngram',len(ngram), unigram
+            if len(ngram)>1:
+                if ngram[1] == unigram:
+                    unigram_history_count += 1
+        continuation_probability = (unigram_history_count - D)/float(len(self.unigram_dict))
+        return continuation_probability
+           
+    
+    def calc_d_bigram(self,bigram):
+        
         n1 = 0
         n2 = 0
         n3 = 0
@@ -170,43 +221,72 @@ class LanguageModel():
 #         print nGram[2], self.discount_KN(nGram[1:3]), self.discount_KN(nGram[2]), counter3, counter2, sum
         for trigram in self.trigram_dict:
             sum += self.trigram_dict[trigram]
-            if trigram[2] == nGram[2] and self.trigram_dict[trigram]==1:
+            if trigram[0:2] == bigram and self.trigram_dict[trigram]==1:
                 n1 += 1
-            if trigram[2] == nGram[2] and self.trigram_dict[trigram]==2:
+            if trigram[0:2] == bigram and self.trigram_dict[trigram]==2:
                 n2 += 1
-            if trigram[2] == nGram[2] and self.trigram_dict[trigram]>=3:
+            if trigram[0:2] == bigram and self.trigram_dict[trigram]>=3:
                 n3 += 1
                 
-        return (self.discount_KN(nGram,3)*n3 + self.discount_KN(nGram,2)*n2 + self.discount_KN(nGram,1)*n1) / float(sum)
+        return (self.discount_KN(bigram,3)*n3 + self.discount_KN(bigram,2)*n2 + self.discount_KN(bigram,1)*n1) / float(sum)
     
-    def backoff_KN(self,nGram):
-        d = self.calc_d(nGram)
-#         print d
-        if self.mod_KN(nGram[1:3]) != 0:
-#             print 'bigram something',self.mod_KN(nGram[1:3])
-            return d * self.mod_KN(nGram[1:3])
+    def calc_d_unigram(self,unigram):
+        
+        n1 = 0
+        n2 = 0
+        n3 = 0
+        sum = 0
+        
+#         print nGram[2], self.discount_KN(nGram[1:3]), self.discount_KN(nGram[2]), counter3, counter2, sum
+        for bigram in self.bigram_dict:
+            sum += self.bigram_dict[bigram]
+            if bigram[0] == unigram and self.bigram_dict[bigram]==1:
+                n1 += 1
+            if bigram[0] == unigram and self.bigram_dict[bigram]==2:
+                n2 += 1
+            if bigram[0] == unigram and self.bigram_dict[bigram]>=3:
+                n3 += 1
+                
+        return (self.discount_KN(unigram,3)*n3 + self.discount_KN(unigram,2)*n2 + self.discount_KN(unigram,1)*n1) / float(sum)
+    
+    def backoff_KN_unigram(self,nGram):
+        d = self.calc_d_unigram(nGram)
+        return d * self.alpha_low_unigram(nGram)
+    
+    
+    def mod_KN_bigram(self,bigram):
+        if self.bigram_dict[bigram] > 0:
+            return self.alpha_low_bigram(bigram)
         else:
-#             print 'unigram something ',d * self.mod_KN(nGram[2])
-            return d * self.mod_KN(nGram[2])
+            return self.backoff_KN_unigram(bigram)
     
-    def mod_KN(self,nGram):
-        if len(nGram)==3:
-            if self.trigram_dict[nGram] > 0:
-                return self.alpha(nGram)
-            else:
-                return self.backoff_KN(nGram)
-        if len(nGram)==2:
-#             nGram = nGram[1:3]
-            if self.bigram_dict[nGram] > 0:
-                return self.alpha(nGram)
-            else:
-                return self.backoff_KN(nGram)
-        if len(nGram)==1:
-#             nGram = nGram[3:4]
-            if self.unigram_dict[nGram] > 0:
-                return self.alpha(nGram)
-            else:
-                return self.backoff_KN(nGram)
+    def backoff_KN_bigram(self,nGram):
+        d = self.calc_d_bigram(nGram)
+#         print d
+        if self.mod_KN_bigram(nGram) != 0 and d != 0:
+#             print 'bigram something',self.mod_KN(nGram[1:3])
+            return d * self.mod_KN_bigram(nGram)
+        else:
+            return self.backoff_KN_unigram(nGram[1])
+    
+    def mod_KN(self,trigram):
+        if self.trigram_dict[trigram] > 0:
+            return self.alpha_high(trigram)
+        else:
+            return self.backoff_KN_bigram(trigram[1:3])
+        
+#         if len(nGram)==2:
+# 
+#             if self.bigram_dict[nGram] > 0:
+#                 return self.alpha(nGram)
+#             else:
+#                 return self.backoff_KN(nGram)
+#         if len(nGram)==1:
+# #             nGram = nGram[3:4]
+#             if self.unigram_dict[nGram] > 0:
+#                 return self.alpha(nGram)
+#             else:
+#                 return self.backoff_KN(nGram)
     
 def generateOutput(model, seed_bigram, iteration=0, answer=''):
     iteration += 1
@@ -232,16 +312,16 @@ def calcPerplexity(testFile,model):
     for letter in test_model.unigram_dict:
         n += test_model.unigram_dict[letter]
     for trigram in test_model.trigram_dict:
-#         print 'PP', model.mod_KN(trigram)
+#         print trigram, model.mod_KN(trigram)
         p_total += math.log(abs(model.mod_KN(trigram)))
-    entropy = p_total/float(n)
-    print 'p_total is: ' ,p_total
+    entropy = -1*p_total/float(n)
+#     print 'p_total is: ' ,p_total
     return math.pow(2, entropy)
                    
             
 def main():
     model = LanguageModel();
-    model.file2dict('../data/training.en')
+    model.file2dict('../data/training.es')
     for word in model.trigram_dict:
         model.goodTuring(word)
     model.discount()
